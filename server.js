@@ -6,14 +6,29 @@ const { GoogleGenerativeAI } = require("@google/generative-ai");
 
 // 2. Configurações Iniciais do Servidor
 const app = express();
+const path = require('path');
+
 app.use(express.json()); // Permite que o servidor entenda JSON
 app.use(cors()); // Permite que front-ends se conectem sem bloqueio
+app.use(express.static(path.join(__dirname, 'frontend'))); // Serve arquivos estáticos
 
 // 3. Configuração da IA
 const apiKey = process.env.GEMINI_API_KEY;
+
+if (!apiKey) {
+    console.error('❌ ERRO: Variável de ambiente GEMINI_API_KEY não encontrada!');
+    console.error('📋 Crie um arquivo .env na raiz do projeto com: GEMINI_API_KEY=sua_chave_aqui');
+    process.exit(1);
+}
+
 const genAI = new GoogleGenerativeAI(apiKey);
 
-// 4. CRIANDO A ROTA (Endpoint) DA API
+// 4. Rota para servir o arquivo index.html
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'frontend', 'index.html'));
+});
+
+// 5. CRIANDO A ROTA (Endpoint) DA API
 // Vamos usar o método POST, pois estamos ENVIANDO uma pergunta para o servidor
 app.post('/api/chat', async (req, res) => {
     try {
@@ -45,8 +60,9 @@ app.post('/api/chat', async (req, res) => {
     }
 });
 
-// 5. Ligar o Servidor
+// 6. Ligar o Servidor
 const PORTA = process.env.PORT || 3000;
 app.listen(PORTA, () => {
     console.log(`🚀 Servidor rodando na porta ${PORTA}`);
+    console.log(`📱 Acesse: http://localhost:${PORTA}`);
 });
